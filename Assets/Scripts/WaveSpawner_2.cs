@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class WaveManager : MonoBehaviour {
+public class WaveSpawner_2 : MonoBehaviour {
 	
     public GameObject BD_Enemy;
     public GameObject SF_Enemy;
@@ -14,6 +14,8 @@ public class WaveManager : MonoBehaviour {
 	public Vector3 StartVec;
 	
 	public int xVarying;
+	
+	public float crap1;
 	
 	public struct Wave {
 		public int BDCount,
@@ -42,11 +44,11 @@ public class WaveManager : MonoBehaviour {
 	public readonly Wave[] Waves = new[]
 	{
 				   //Time   BD  SF  SS  BC  GD  MO  MS SDelay
-		new Wave(	1000,	5,	0,	0,	0,	0,	0,	0,	0),
-		new Wave(	4000,	7,	3,	0,	0,	0,	0,	0,	100), //<== at 8 seconds, this wave spawns
-		new Wave(	8000,	10,	5,	0,	0,	0,	0,	0,	200), //<== at 16 s
-		new Wave(	12000,	12,	5,	3,	0,	0,	0,	0,	300),
-		new Wave(	16000,	15,	5,	5,	0,	0,	0,	0,	400),
+		new Wave(	1000,	5,	0,	0,	0,	0,	0,	0,	1000),
+		new Wave(	4000,	7,	3,	0,	0,	0,	0,	0,	1000), //<== at 8 seconds, this wave spawns
+		new Wave(	8000,	10,	5,	0,	0,	0,	0,	0,	1000), //<== at 16 s
+		new Wave(	12000,	12,	5,	3,	0,	0,	0,	0,	1000),
+		new Wave(	16000,	15,	5,	5,	0,	0,	0,	0,	1000),
 		//Null-Object, to sign the end of the array
 		new Wave(	-1,		-1,	-1,	-1,	-1,	-1,	-1,	-1, -1)	
 	};
@@ -55,11 +57,11 @@ public class WaveManager : MonoBehaviour {
 	public double Timer = 0;
 	
 	//Last Spawned wave
-	public int LastSpawn = 0;
+	public int LastSpawn = -1;
 	
 	//All Data needed about the last Enemy-Spawn
 	private struct LastEnemySpawn {
-		public int TimeStamp;
+		public double TimeStamp;
 		public float XPos;
 		public float XSize;
 	}
@@ -83,7 +85,8 @@ public class WaveManager : MonoBehaviour {
 	
 	=========================================================*/	
 	void SpawnWave(Wave AWave) {
-		GameObject clone = Instantiate(BD_Enemy, StartVec, BD_Enemy.transform.rotation) as GameObject;
+		GameObject toSpawn = BD_Enemy;
+		GameObject clone = Instantiate(toSpawn, StartVec, toSpawn.transform.rotation) as GameObject;
 		//Copy all Values to currSpawn
 		currSpawn.BDCount = AWave.BDCount;
 		currSpawn.SFCount = AWave.SFCount;
@@ -96,7 +99,7 @@ public class WaveManager : MonoBehaviour {
 		currSpawn.SpawnDelay = AWave.SpawnDelay;
 		
 		//Reset LastEnemySpawn
-		lastEnemySpawn.TimeStamp = 0;
+		lastEnemySpawn.TimeStamp = Timer;
 		lastEnemySpawn.XPos = 0xFFFFF;
 		lastEnemySpawn.XSize = 0;
 	}
@@ -108,7 +111,7 @@ public class WaveManager : MonoBehaviour {
 		Also removes that enemy from the Wave.
 	
 	=========================================================*/	
-	/*GameObject GetRandomEnemy(){
+	GameObject GetRandomEnemy(){
 		//Motherships should always Spawn first
 		if (currSpawn.MSCount > 0){
 			currSpawn.MSCount--;
@@ -116,68 +119,78 @@ public class WaveManager : MonoBehaviour {
 		}
 		
 		//Check if any Enemy can spawn
-		if (currSpawn.BCCount + currSpawn.BDCount + currSpawn.GDCount + currSpawn.MOCount + currSpawn.SFCount + currSpawn.SSCount == 0) return null;
+		int EnemyCount = currSpawn.BCCount + currSpawn.BDCount + currSpawn.GDCount + currSpawn.MOCount + currSpawn.SFCount + currSpawn.SSCount;
+		
+		//crap1 = currSpawn.BDCount;
+		
+		if (EnemyCount <= 0) return null;
+		
+		int x = (int) (Random.value * EnemyCount);
 		
 		
-		int x = 0;
-		while(true){
-			x = (int)Random.value*600;
-			//Heres the propability of which enemy will get spawned the most can be determined. higher Number-Range for an Enemy => 
-			//Higher Spawn-Propability. shouldn't overlap though.
-			
-			if ((x >= 0) && (x <= 99)) {
-				if (currSpawn.BCCount > 0){
-					currSpawn.BCCount--;
+		if (x < currSpawn.BDCount){
+				if (currSpawn.BDCount > 0){
+					currSpawn.BDCount--;
 					return BD_Enemy;
 				}
-			}
-			if ((x >= 100) && (x <= 199)) {
+		}
+		x -= currSpawn.BDCount;
+		
+		if (x < currSpawn.SFCount){
 				if (currSpawn.SFCount > 0){
 					currSpawn.SFCount--;
 					return SF_Enemy;
 				}
-			}
-			if ((x >= 200) && (x <= 299)) {
+		}
+		x -= currSpawn.SFCount;
+		
+		if (x < currSpawn.SSCount){
 				if (currSpawn.SSCount > 0){
 					currSpawn.SSCount--;
 					return SS_Enemy;
 				}
-			}
-			if ((x >= 300) && (x <= 399)) {
+		}
+		x -= currSpawn.SSCount;
+		
+		if (x < currSpawn.BCCount){
 				if (currSpawn.BCCount > 0){
 					currSpawn.BCCount--;
 					return BC_Enemy;
 				}
-			}
-			if ((x >= 400) && (x <= 499)) {
+		}
+		x -= currSpawn.BCCount;
+		
+		if (x < currSpawn.GDCount){
 				if (currSpawn.GDCount > 0){
 					currSpawn.GDCount--;
 					return GD_Enemy;
 				}
-			}
-			if ((x >= 500) && (x <= 600)) {
+		}
+		x -= currSpawn.GDCount;
+		
+		if (x < currSpawn.MOCount){
 				if (currSpawn.MOCount > 0){
 					currSpawn.MOCount--;
 					return MO_Enemy;
 				}
-			}
 		}
-	}*/
-	 
-	
+		x -= currSpawn.MOCount;
+		return null;
+	}
 	
 	/*=========================================================
 	
 		Checks if an Enemy from the current Wave should be spawned, and if so, spawns it.
 	
 	=========================================================*/	
-	/*void SpawnUpdate () {
+	void SpawnUpdate () {
 		//If the time is < 0, its an invalid one / there is no wave spawning at the moment
 		if (currSpawn.StartTime < 0) return;
 		
 		if (Timer - lastEnemySpawn.TimeStamp > currSpawn.SpawnDelay){
 			GameObject toSpawn = GetRandomEnemy();
 			if (toSpawn != null){
+				crap1 = 1;
 				//Get an X-Offset, that won't collide with other enemys
 				float xVal = Random.value * xVarying - xVarying / 2;
 				int runs = 0;
@@ -189,20 +202,20 @@ public class WaveManager : MonoBehaviour {
 				GameObject clone = Instantiate(toSpawn, StartVec + new Vector3(xVal, 0, 0), toSpawn.transform.rotation) as GameObject;	
 				lastEnemySpawn.XPos = xVal;
 				lastEnemySpawn.XSize = clone.collider.bounds.size.x;
+				lastEnemySpawn.TimeStamp = Timer;
 			} else {
 				//There is no more enemy to Spawn.
-				currSpawn.StartTime = - 1;		
+				currSpawn.StartTime = - 1;
 			}
 		}
-	}*/
+	}
 	
 	// Update is called once per frame
 	void Update () {
 		Timer += Time.deltaTime * 1000;
-		if ((Timer > Waves[LastSpawn].StartTime) && (Waves[LastSpawn].StartTime != - 1) && (currSpawn.StartTime == - 1))  {
-			SpawnWave(Waves[LastSpawn]);
-			LastSpawn++;
+		if ((Timer > Waves[LastSpawn+1].StartTime) && (Waves[LastSpawn+1].StartTime != - 1))  {
+			SpawnWave(Waves[++LastSpawn]);
 		}
-		/*UpdateSpawns();*/
+		SpawnUpdate();
 	}
 }
